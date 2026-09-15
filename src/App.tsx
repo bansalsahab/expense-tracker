@@ -10,6 +10,7 @@ import Expenses from './pages/Expenses';
 import Categories from './pages/Categories';
 import Budgets from './pages/Budgets';
 import Reports from './pages/Reports';
+import QuickAdd from './pages/QuickAdd';
 import type { ReactNode } from 'react';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -43,6 +44,7 @@ function AppRoutes() {
         <Route path="/categories" element={<Categories />} />
         <Route path="/budgets" element={<Budgets />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/quick-add" element={<QuickAdd />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
