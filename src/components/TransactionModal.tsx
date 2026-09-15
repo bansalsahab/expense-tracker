@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X } from 'lucide-react';
 import type { Transaction, Category } from '../types';
 
@@ -20,23 +20,26 @@ export default function TransactionModal({ categories, initial, onSave, onClose 
   const [notes, setNotes] = useState(initial?.notes ?? '');
 
   const filtered = categories.filter(c => c.type === type);
+  // Derive effective categoryId — if current selection is from wrong type, fall back to first of filtered
+  const effectiveCategoryId = filtered.find(c => c.id === categoryId) ? categoryId : (filtered[0]?.id ?? '');
 
-  useEffect(() => {
-    if (filtered.length && !filtered.find(c => c.id === categoryId)) {
-      setCategoryId(filtered[0].id);
-    }
-  }, [type]);
+  function handleTypeChange(t: 'expense' | 'income') {
+    setType(t);
+    // Reset to first category of the new type
+    const firstOfType = categories.find(c => c.type === t);
+    if (firstOfType) setCategoryId(firstOfType.id);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const num = parseFloat(amount);
-    if (!num || num <= 0 || !description.trim() || !categoryId) return;
+    if (!num || num <= 0 || !description.trim() || !effectiveCategoryId) return;
     const payload = {
       ...(initial ? { id: initial.id } : {}),
       type,
       amount: Math.round(num * 100) / 100,
       description: description.trim(),
-      categoryId,
+      categoryId: effectiveCategoryId,
       date,
       notes: notes.trim() || undefined,
     };
@@ -65,7 +68,7 @@ export default function TransactionModal({ categories, initial, onSave, onClose 
             <button
               key={t}
               type="button"
-              onClick={() => setType(t)}
+              onClick={() => handleTypeChange(t)}
               className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 type === t
                   ? t === 'expense' ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'
@@ -113,7 +116,7 @@ export default function TransactionModal({ categories, initial, onSave, onClose 
             <label className="label">Category</label>
             <select
               className="input"
-              value={categoryId}
+              value={effectiveCategoryId}
               onChange={e => setCategoryId(e.target.value)}
               required
             >

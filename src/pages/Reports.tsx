@@ -6,8 +6,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie,
 } from 'recharts';
-import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, RefreshCw } from 'lucide-react';
 import { exportToExcel } from '../utils/exportExcel';
+import { useAutoExport } from '../utils/useAutoExport';
 
 export default function Reports() {
   const { data } = useApp();
@@ -15,6 +16,9 @@ export default function Reports() {
 
   const [year, setYear] = useState(new Date().getFullYear());
   const [exporting, setExporting] = useState(false);
+  const [autoExport, setAutoExport] = useState(false);
+
+  const autoStatus = useAutoExport(data, autoExport);
 
   async function handleExport() {
     setExporting(true);
@@ -76,14 +80,39 @@ export default function Reports() {
             <ChevronRight size={18} />
           </button>
         </div>
-        <button
-          className="btn-primary ml-auto"
-          onClick={handleExport}
-          disabled={exporting || transactions.length === 0}
-        >
-          <Download size={16} />
-          {exporting ? 'Exporting…' : 'Export to Excel'}
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          {/* Auto-export toggle */}
+          <button
+            onClick={() => setAutoExport(v => !v)}
+            disabled={transactions.length === 0}
+            title={autoExport ? 'Auto-export ON — re-downloads on every change' : 'Enable auto-export'}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors min-h-[44px] border ${
+              autoExport
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
+            } disabled:opacity-40`}
+          >
+            <RefreshCw
+              size={15}
+              className={autoStatus === 'exporting' ? 'animate-spin' : ''}
+            />
+            {autoExport
+              ? autoStatus === 'exporting' ? 'Exporting…'
+              : autoStatus === 'done'      ? 'Saved ✓'
+              : autoStatus === 'error'     ? 'Error'
+              : 'Auto ON'
+              : 'Auto'}
+          </button>
+          {/* Manual export */}
+          <button
+            className="btn-primary"
+            onClick={handleExport}
+            disabled={exporting || transactions.length === 0}
+          >
+            <Download size={16} />
+            {exporting ? 'Exporting…' : 'Export Excel'}
+          </button>
+        </div>
       </div>
 
       {/* Stat cards */}

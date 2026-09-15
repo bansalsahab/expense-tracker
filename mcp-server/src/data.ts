@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { v4 as uuidv4 } from 'uuid';
-import type { AppData, Category, Transaction, Budget } from './types';
+import type { AppData, Category, Transaction } from './types';
 
 const DATA_DIR = path.join(os.homedir(), '.expense-tracker');
 const DATA_FILE = path.join(DATA_DIR, 'data.json');
