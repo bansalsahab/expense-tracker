@@ -4,6 +4,7 @@ import { AppProvider } from './context';
 import { useAuth } from './auth/AuthContext';
 import Layout from './Layout';
 import Login from './pages/Login';
+import Setup from './pages/Setup';
 import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses';
 import Categories from './pages/Categories';
@@ -23,6 +24,10 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 }
 
 function AppRoutes() {
+  const { configured } = useAuth();
+
+  if (!configured) return <Setup />;
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
