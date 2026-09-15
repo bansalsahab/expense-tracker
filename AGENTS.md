@@ -2,6 +2,19 @@
 
 This file provides guidance to agents when working with code in this repository.
 
+## Supabase Setup (Required before running)
+
+1. Create a free project at https://supabase.com
+2. Run `supabase/migrations/001_initial.sql` in the Supabase SQL Editor
+3. Copy `.env.example` to `.env` and fill in your project URL and anon key:
+   ```
+   VITE_SUPABASE_URL=https://xxxx.supabase.co
+   VITE_SUPABASE_ANON_KEY=eyJ...
+   ```
+4. In Supabase dashboard → Authentication → Providers, enable **Google** and/or **Email**
+5. For Google OAuth, add `https://your-vercel-url.vercel.app` to allowed redirect URLs
+6. For Vercel deploy: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables in the Vercel project settings
+
 ## Commands
 
 ```bash

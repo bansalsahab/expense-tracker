@@ -1,132 +1,181 @@
 import type { AppData, Category, Transaction, Budget } from './types';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from './lib/supabase';
 
-// ── MCP file sync (dev only) ───────────────────────────────────────────────
-// When running locally with `npm run dev`, POST to /api/sync so the MCP server
-// can read the same data from ~/.expense-tracker/data.json
-function syncToFile(data: AppData): void {
-  if (typeof window === 'undefined') return;
-  fetch('/api/sync', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  }).catch(() => {
-    // Silently ignore — endpoint only exists in dev with vite plugin
-  });
-}
-
-const STORAGE_KEY = 'expense-tracker-data';
-
-const DEFAULT_CATEGORIES: Category[] = [
-  { id: uuidv4(), name: 'Food & Dining', color: '#f97316', icon: '🍔', type: 'expense' },
-  { id: uuidv4(), name: 'Transport', color: '#3b82f6', icon: '🚗', type: 'expense' },
-  { id: uuidv4(), name: 'Shopping', color: '#8b5cf6', icon: '🛍️', type: 'expense' },
-  { id: uuidv4(), name: 'Entertainment', color: '#ec4899', icon: '🎬', type: 'expense' },
-  { id: uuidv4(), name: 'Health', color: '#10b981', icon: '💊', type: 'expense' },
-  { id: uuidv4(), name: 'Utilities', color: '#f59e0b', icon: '💡', type: 'expense' },
-  { id: uuidv4(), name: 'Rent / Housing', color: '#6366f1', icon: '🏠', type: 'expense' },
-  { id: uuidv4(), name: 'Subscriptions', color: '#14b8a6', icon: '📱', type: 'expense' },
-  { id: uuidv4(), name: 'Education', color: '#84cc16', icon: '📚', type: 'expense' },
-  { id: uuidv4(), name: 'Personal Care', color: '#f43f5e', icon: '💅', type: 'expense' },
-  { id: uuidv4(), name: 'Salary', color: '#22c55e', icon: '💼', type: 'income' },
-  { id: uuidv4(), name: 'Freelance', color: '#06b6d4', icon: '💻', type: 'income' },
-  { id: uuidv4(), name: 'Investment', color: '#a855f7', icon: '📈', type: 'income' },
-  { id: uuidv4(), name: 'Other Income', color: '#64748b', icon: '💰', type: 'income' },
+// ── Default categories seeded for new users ─────────────────────────────────
+export const DEFAULT_CATEGORIES: Omit<Category, 'id'>[] = [
+  { name: 'Food & Dining',  color: '#f97316', icon: '🍔', type: 'expense' },
+  { name: 'Transport',      color: '#3b82f6', icon: '🚗', type: 'expense' },
+  { name: 'Shopping',       color: '#8b5cf6', icon: '🛍️', type: 'expense' },
+  { name: 'Entertainment',  color: '#ec4899', icon: '🎬', type: 'expense' },
+  { name: 'Health',         color: '#10b981', icon: '💊', type: 'expense' },
+  { name: 'Utilities',      color: '#f59e0b', icon: '💡', type: 'expense' },
+  { name: 'Rent / Housing', color: '#6366f1', icon: '🏠', type: 'expense' },
+  { name: 'Subscriptions',  color: '#14b8a6', icon: '📱', type: 'expense' },
+  { name: 'Education',      color: '#84cc16', icon: '📚', type: 'expense' },
+  { name: 'Personal Care',  color: '#f43f5e', icon: '💅', type: 'expense' },
+  { name: 'Salary',         color: '#22c55e', icon: '💼', type: 'income'  },
+  { name: 'Freelance',      color: '#06b6d4', icon: '💻', type: 'income'  },
+  { name: 'Investment',     color: '#a855f7', icon: '📈', type: 'income'  },
+  { name: 'Other Income',   color: '#64748b', icon: '💰', type: 'income'  },
 ];
 
-const DEFAULT_DATA: AppData = {
-  transactions: [],
-  categories: DEFAULT_CATEGORIES,
-  budgets: [],
-};
+export function generateId(): string { return uuidv4(); }
 
-export function loadData(): AppData {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_DATA;
-    const parsed = JSON.parse(raw) as AppData;
+// ── Load all data for user ─────────────────────────────────────────────────
+export async function loadData(userId: string): Promise<AppData> {
+  const [catRes, txRes, budRes] = await Promise.all([
+    supabase.from('categories').select('*').eq('user_id', userId).order('created_at'),
+    supabase.from('transactions').select('*').eq('user_id', userId).order('date', { ascending: false }),
+    supabase.from('budgets').select('*').eq('user_id', userId),
+  ]);
+
+  const categories: Category[] = (catRes.data ?? []).map(r => ({
+    id: r.id, name: r.name, color: r.color, icon: r.icon, type: r.type,
+  }));
+
+  // Seed default categories if brand new user
+  if (categories.length === 0) {
+    const seeds = DEFAULT_CATEGORIES.map(c => ({ ...c, user_id: userId, id: uuidv4() }));
+    await supabase.from('categories').insert(seeds);
     return {
-      transactions: parsed.transactions ?? [],
-      categories: parsed.categories ?? DEFAULT_CATEGORIES,
-      budgets: parsed.budgets ?? [],
+      transactions: [],
+      categories: seeds.map(({ user_id: _u, ...rest }) => rest) as Category[],
+      budgets: [],
     };
-  } catch {
-    return DEFAULT_DATA;
   }
+
+  const transactions: Transaction[] = (txRes.data ?? []).map(r => ({
+    id: r.id,
+    amount: Number(r.amount),
+    description: r.description,
+    categoryId: r.category_id ?? '',
+    date: r.date,
+    type: r.type,
+    notes: r.notes ?? undefined,
+  }));
+
+  const budgets: Budget[] = (budRes.data ?? []).map(r => ({
+    id: r.id,
+    categoryId: r.category_id ?? '',
+    amount: Number(r.amount),
+    month: r.month,
+  }));
+
+  return { transactions, categories, budgets };
 }
 
-export function saveData(data: AppData): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  syncToFile(data);
+// ── Transaction CRUD ──────────────────────────────────────────────────────────
+export async function addTransaction(
+  userId: string, tx: Omit<Transaction, 'id'>
+): Promise<Transaction> {
+  const { data, error } = await supabase
+    .from('transactions')
+    .insert({
+      user_id:     userId,
+      amount:      tx.amount,
+      description: tx.description,
+      category_id: tx.categoryId || null,
+      date:        tx.date,
+      type:        tx.type,
+      notes:       tx.notes ?? null,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return {
+    id: data.id, amount: Number(data.amount), description: data.description,
+    categoryId: data.category_id ?? '', date: data.date, type: data.type,
+    notes: data.notes ?? undefined,
+  };
 }
 
-export function generateId(): string {
-  return uuidv4();
+export async function updateTransaction(
+  userId: string, tx: Transaction
+): Promise<void> {
+  const { error } = await supabase
+    .from('transactions')
+    .update({
+      amount:      tx.amount,
+      description: tx.description,
+      category_id: tx.categoryId || null,
+      date:        tx.date,
+      type:        tx.type,
+      notes:       tx.notes ?? null,
+    })
+    .eq('id', tx.id)
+    .eq('user_id', userId);
+  if (error) throw error;
 }
 
-// ── Transaction helpers ────────────────────────────────────────────────────
-export function addTransaction(data: AppData, tx: Omit<Transaction, 'id'>): AppData {
-  const updated = { ...data, transactions: [{ ...tx, id: generateId() }, ...data.transactions] };
-  saveData(updated);
-  return updated;
+export async function deleteTransaction(userId: string, id: string): Promise<void> {
+  const { error } = await supabase.from('transactions').delete().eq('id', id).eq('user_id', userId);
+  if (error) throw error;
 }
 
-export function updateTransaction(data: AppData, tx: Transaction): AppData {
-  const updated = { ...data, transactions: data.transactions.map(t => t.id === tx.id ? tx : t) };
-  saveData(updated);
-  return updated;
+// ── Category CRUD ─────────────────────────────────────────────────────────────
+export async function addCategory(
+  userId: string, cat: Omit<Category, 'id'>
+): Promise<Category> {
+  const { data, error } = await supabase
+    .from('categories')
+    .insert({ user_id: userId, ...cat })
+    .select()
+    .single();
+  if (error) throw error;
+  return { id: data.id, name: data.name, color: data.color, icon: data.icon, type: data.type };
 }
 
-export function deleteTransaction(data: AppData, id: string): AppData {
-  const updated = { ...data, transactions: data.transactions.filter(t => t.id !== id) };
-  saveData(updated);
-  return updated;
+export async function updateCategory(userId: string, cat: Category): Promise<void> {
+  const { error } = await supabase
+    .from('categories')
+    .update({ name: cat.name, color: cat.color, icon: cat.icon, type: cat.type })
+    .eq('id', cat.id)
+    .eq('user_id', userId);
+  if (error) throw error;
 }
 
-// ── Category helpers ───────────────────────────────────────────────────────
-export function addCategory(data: AppData, cat: Omit<Category, 'id'>): AppData {
-  const updated = { ...data, categories: [...data.categories, { ...cat, id: generateId() }] };
-  saveData(updated);
-  return updated;
+export async function deleteCategory(userId: string, id: string): Promise<void> {
+  const { error } = await supabase.from('categories').delete().eq('id', id).eq('user_id', userId);
+  if (error) throw error;
 }
 
-export function updateCategory(data: AppData, cat: Category): AppData {
-  const updated = { ...data, categories: data.categories.map(c => c.id === cat.id ? cat : c) };
-  saveData(updated);
-  return updated;
+// ── Budget CRUD ───────────────────────────────────────────────────────────────
+export async function upsertBudget(
+  userId: string, b: Omit<Budget, 'id'>
+): Promise<Budget> {
+  const { data, error } = await supabase
+    .from('budgets')
+    .upsert(
+      { user_id: userId, category_id: b.categoryId, amount: b.amount, month: b.month },
+      { onConflict: 'user_id,category_id,month' }
+    )
+    .select()
+    .single();
+  if (error) throw error;
+  return { id: data.id, categoryId: data.category_id, amount: Number(data.amount), month: data.month };
 }
 
-export function deleteCategory(data: AppData, id: string): AppData {
-  const updated = { ...data, categories: data.categories.filter(c => c.id !== id) };
-  saveData(updated);
-  return updated;
+export async function deleteBudget(userId: string, id: string): Promise<void> {
+  const { error } = await supabase.from('budgets').delete().eq('id', id).eq('user_id', userId);
+  if (error) throw error;
 }
 
-// ── Budget helpers ─────────────────────────────────────────────────────────
-export function upsertBudget(data: AppData, budget: Omit<Budget, 'id'> & { id?: string }): AppData {
-  const existing = data.budgets.find(b => b.categoryId === budget.categoryId && b.month === budget.month);
-  let budgets: Budget[];
-  if (existing) {
-    budgets = data.budgets.map(b => b.id === existing.id ? { ...b, amount: budget.amount } : b);
-  } else {
-    budgets = [...data.budgets, { ...budget, id: generateId() }];
-  }
-  const updated = { ...data, budgets };
-  saveData(updated);
-  return updated;
-}
-
-export function deleteBudget(data: AppData, id: string): AppData {
-  const updated = { ...data, budgets: data.budgets.filter(b => b.id !== id) };
-  saveData(updated);
-  return updated;
-}
-
-// ── Utility ────────────────────────────────────────────────────────────────
+// ── Utility ───────────────────────────────────────────────────────────────────
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 }
 
 export function currentMonth(): string {
   return new Date().toISOString().slice(0, 7);
+}
+
+// ── MCP file sync (dev only) ──────────────────────────────────────────────────
+export function syncToFile(data: AppData): void {
+  if (typeof window === 'undefined') return;
+  fetch('/api/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }).catch(() => { /* silently ignore — dev only */ });
 }
