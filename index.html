@@ -2,9 +2,49 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>expense-tracker</title>
+    <link rel="apple-touch-icon" href="/icons/icon-180.png" />
+
+    <!-- Theme -->
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="msapplication-TileColor" content="#2563eb" />
+
+    <!-- iOS PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Expenses" />
+
+    <!-- iOS Splash Screens (common iPhone sizes) -->
+    <!-- iPhone 15 Pro Max / 14 Pro Max (430×932) -->
+    <link
+      rel="apple-touch-startup-image"
+      media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)"
+      href="/icons/icon-512.png"
+    />
+    <!-- iPhone 15 / 14 (390×844) -->
+    <link
+      rel="apple-touch-startup-image"
+      media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)"
+      href="/icons/icon-512.png"
+    />
+    <!-- iPhone SE 3rd gen (375×667) -->
+    <link
+      rel="apple-touch-startup-image"
+      media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)"
+      href="/icons/icon-512.png"
+    />
+
+    <!-- SEO -->
+    <meta name="description" content="Track your personal expenses and income. Free, private, offline-capable." />
+    <meta name="application-name" content="Expense Tracker" />
+
+    <title>Expense Tracker</title>
   </head>
   <body>
     <div id="root"></div>

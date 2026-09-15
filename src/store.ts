@@ -1,6 +1,20 @@
 import type { AppData, Category, Transaction, Budget } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
+// ── MCP file sync (dev only) ───────────────────────────────────────────────
+// When running locally with `npm run dev`, POST to /api/sync so the MCP server
+// can read the same data from ~/.expense-tracker/data.json
+function syncToFile(data: AppData): void {
+  if (typeof window === 'undefined') return;
+  fetch('/api/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  }).catch(() => {
+    // Silently ignore — endpoint only exists in dev with vite plugin
+  });
+}
+
 const STORAGE_KEY = 'expense-tracker-data';
 
 const DEFAULT_CATEGORIES: Category[] = [
@@ -43,6 +57,7 @@ export function loadData(): AppData {
 
 export function saveData(data: AppData): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  syncToFile(data);
 }
 
 export function generateId(): string {

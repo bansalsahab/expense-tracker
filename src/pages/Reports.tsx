@@ -6,13 +6,24 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie,
 } from 'recharts';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { exportToExcel } from '../utils/exportExcel';
 
 export default function Reports() {
   const { data } = useApp();
   const { transactions, categories } = data;
 
   const [year, setYear] = useState(new Date().getFullYear());
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      await exportToExcel(data);
+    } finally {
+      setExporting(false);
+    }
+  }
   const catMap = useMemo(() => Object.fromEntries(categories.map(c => [c.id, c])), [categories]);
 
   // Monthly summary for the selected year
@@ -50,18 +61,28 @@ export default function Reports() {
 
   return (
     <div className="p-4 lg:p-6 max-w-5xl mx-auto space-y-6">
-      {/* Year nav */}
-      <div className="flex items-center justify-between card px-5 py-3 max-w-xs">
-        <button onClick={() => setYear(y => y - 1)} className="p-2 hover:bg-slate-100 rounded-xl">
-          <ChevronLeft size={18} />
-        </button>
-        <span className="font-semibold text-slate-800">{year}</span>
+      {/* Top bar */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between card px-5 py-3 flex-shrink-0">
+          <button onClick={() => setYear(y => y - 1)} className="p-2 hover:bg-slate-100 rounded-xl">
+            <ChevronLeft size={18} />
+          </button>
+          <span className="font-semibold text-slate-800 px-2">{year}</span>
+          <button
+            onClick={() => setYear(y => y + 1)}
+            disabled={year >= new Date().getFullYear()}
+            className="p-2 hover:bg-slate-100 rounded-xl disabled:opacity-30"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
         <button
-          onClick={() => setYear(y => y + 1)}
-          disabled={year >= new Date().getFullYear()}
-          className="p-2 hover:bg-slate-100 rounded-xl disabled:opacity-30"
+          className="btn-primary ml-auto"
+          onClick={handleExport}
+          disabled={exporting || transactions.length === 0}
         >
-          <ChevronRight size={18} />
+          <Download size={16} />
+          {exporting ? 'Exporting…' : 'Export to Excel'}
         </button>
       </div>
 
