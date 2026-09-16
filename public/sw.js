@@ -1,7 +1,8 @@
-const CACHE_NAME = 'expense-tracker-v1';
+const CACHE_NAME = 'expense-tracker-v2';
 const APP_SHELL = [
   '/',
   '/index.html',
+  '/quick-add',
   '/manifest.json',
   '/icons/icon-180.png',
   '/icons/icon-192.png',
@@ -37,6 +38,13 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
+
+      // For SPA routes (no extension), serve index.html from cache
+      const isRoute = !url.pathname.includes('.');
+      if (isRoute) {
+        return caches.match('/index.html').then(r => r ?? fetch(event.request));
+      }
+
       return fetch(event.request).then((response) => {
         // Cache JS/CSS/HTML assets from the build
         if (

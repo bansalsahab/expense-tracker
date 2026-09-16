@@ -27,5 +27,20 @@
       "type": "image/png",
       "purpose": "any"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quick Add Expense",
+      "short_name": "Add Expense",
+      "description": "Instantly log a new expense",
+      "url": "/quick-add",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }
