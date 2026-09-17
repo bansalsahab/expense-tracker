@@ -163,7 +163,7 @@ export async function deleteBudget(userId: string, id: string): Promise<void> {
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(amount);
 }
 
 export function currentMonth(): string {

@@ -7,7 +7,7 @@ const HEADER_FILL: ExcelJS.Fill = {
 const HEADER_FONT: Partial<ExcelJS.Font> = {
   bold: true, color: { argb: 'FFFFFFFF' }, size: 11,
 };
-const CURRENCY_FMT = '"$"#,##0.00';
+const CURRENCY_FMT = '"₹"#,##0.00';
 const DATE_FMT = 'DD-MMM-YYYY';
 
 function styleHeader(row: ExcelJS.Row): void {

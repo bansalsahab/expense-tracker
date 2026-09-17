@@ -119,7 +119,7 @@ export default function QuickAdd() {
           </div>
           <p className="text-white text-xl font-semibold">Saved!</p>
           <p className="text-white/60 text-sm">
-            ${parseFloat(amount).toFixed(2)} • {data.categories.find(c => c.id === effectiveCatId)?.name}
+            ₹{parseFloat(amount).toFixed(2)} • {data.categories.find(c => c.id === effectiveCatId)?.name}
           </p>
         </div>
       </div>
@@ -207,7 +207,7 @@ export default function QuickAdd() {
             <div className="px-4 pt-3 pb-1">
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Amount</p>
               <div className="flex items-center">
-                <span className="text-3xl font-light text-gray-400 mr-1">$</span>
+                <span className="text-3xl font-light text-gray-400 mr-1">₹</span>
                 <input
                   ref={amountRef}
                   type="number"

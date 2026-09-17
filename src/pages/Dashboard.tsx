@@ -130,7 +130,7 @@ export default function Dashboard() {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 1000 ? (v/1000).toFixed(0)+'k' : v}`} />
+              <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v >= 1000 ? (v/1000).toFixed(0)+'k' : v}`} />
               <Tooltip
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 formatter={((v: unknown, name: unknown) => [formatCurrency(v as number), typeof name === 'string' ? name.charAt(0).toUpperCase() + name.slice(1) : '']) as any}
