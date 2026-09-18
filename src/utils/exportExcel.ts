@@ -51,7 +51,7 @@ export async function exportToExcel(data: AppData): Promise<void> {
       cat:    catMap[t.categoryId]?.name ?? 'Unknown',
       type:   t.type.charAt(0).toUpperCase() + t.type.slice(1),
       amount: t.type === 'expense' ? -t.amount : t.amount,
-      pm:     '—',
+      pm:     t.paymentMethod ?? '—',
       notes:  t.notes ?? '',
     });
     row.getCell('date').numFmt   = DATE_FMT;

@@ -8,6 +8,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/categories': 'Categories',
   '/budgets': 'Budgets',
   '/reports': 'Reports',
+  '/quick-add': 'Quick Add',
 };
 
 interface HeaderProps {

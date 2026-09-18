@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import type { Transaction, Category } from '../types';
+import type { Transaction, Category, PaymentMethod } from '../types';
+import { PAYMENT_METHODS } from '../types';
 
 interface Props {
   categories: Category[];
@@ -17,6 +18,7 @@ export default function TransactionModal({ categories, initial, onSave, onClose 
   const [description, setDescription] = useState(initial?.description ?? '');
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? '');
   const [date, setDate] = useState(initial?.date ?? today());
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | ''>(initial?.paymentMethod ?? '');
   const [notes, setNotes] = useState(initial?.notes ?? '');
 
   const filtered = categories.filter(c => c.type === type);
@@ -41,6 +43,7 @@ export default function TransactionModal({ categories, initial, onSave, onClose 
       description: description.trim(),
       categoryId: effectiveCategoryId,
       date,
+      paymentMethod: paymentMethod || undefined,
       notes: notes.trim() || undefined,
     };
     onSave(payload as Transaction);
@@ -84,7 +87,7 @@ export default function TransactionModal({ categories, initial, onSave, onClose 
           <div>
             <label className="label">Amount</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">₹</span>
               <input
                 className="input pl-7"
                 type="number"
@@ -136,6 +139,20 @@ export default function TransactionModal({ categories, initial, onSave, onClose 
               onChange={e => setDate(e.target.value)}
               required
             />
+          </div>
+
+          <div>
+            <label className="label">Payment Method <span className="text-slate-400 font-normal">(optional)</span></label>
+            <select
+              className="input"
+              value={paymentMethod}
+              onChange={e => setPaymentMethod(e.target.value as PaymentMethod | '')}
+            >
+              <option value="">Not specified</option>
+              {PAYMENT_METHODS.map(pm => (
+                <option key={pm} value={pm}>{pm}</option>
+              ))}
+            </select>
           </div>
 
           <div>

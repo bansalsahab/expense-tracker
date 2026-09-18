@@ -3,7 +3,7 @@ import os from 'os';
 import ExcelJS from 'exceljs';
 import {
   loadData, addTransaction, deleteTransaction,
-  formatUSD, currentMonth,
+  formatINR, currentMonth,
 } from './data';
 import type { Transaction } from './types';
 
@@ -32,7 +32,15 @@ export function handleAddExpense(args: Record<string, unknown>) {
     throw new Error(`Category "${args['category']}" not found. Available: ${names}`);
   }
 
-  const paymentMethod = (args['paymentMethod'] as string) ?? undefined;
+  const VALID_PAYMENT_METHODS = ['Cash', 'Card', 'UPI', 'Other'] as const;
+  let paymentMethod: Transaction['paymentMethod'] = undefined;
+  if (args['paymentMethod'] != null && String(args['paymentMethod']).trim() !== '') {
+    const pm = VALID_PAYMENT_METHODS.find(
+      m => m.toLowerCase() === String(args['paymentMethod']).toLowerCase()
+    );
+    if (!pm) throw new Error(`paymentMethod must be one of: ${VALID_PAYMENT_METHODS.join(', ')}`);
+    paymentMethod = pm;
+  }
   const notes = args['notes'] ? String(args['notes']) : undefined;
 
   const tx: Omit<Transaction, 'id'> = {
@@ -41,7 +49,7 @@ export function handleAddExpense(args: Record<string, unknown>) {
     categoryId: category.id,
     date,
     type: type as 'expense' | 'income',
-    paymentMethod: paymentMethod as Transaction['paymentMethod'],
+    paymentMethod,
     notes,
   };
 
@@ -50,7 +58,7 @@ export function handleAddExpense(args: Record<string, unknown>) {
   return {
     success: true,
     transaction: added,
-    message: `Added ${type}: ${formatUSD(amount)} for "${description}" in ${category.name} on ${date}`,
+    message: `Added ${type}: ${formatINR(amount)} for "${description}" in ${category.name} on ${date}`,
   };
 }
 
@@ -96,7 +104,7 @@ export function handleDeleteExpense(args: Record<string, unknown>) {
   if (!tx) throw new Error(`Transaction with id "${id}" not found`);
 
   deleteTransaction(data, id);
-  return { success: true, message: `Deleted transaction: "${tx.description}" (${formatUSD(tx.amount)})` };
+  return { success: true, message: `Deleted transaction: "${tx.description}" (${formatINR(tx.amount)})` };
 }
 
 // ── get_summary ────────────────────────────────────────────────────────────
@@ -123,7 +131,7 @@ export function handleGetSummary(args: Record<string, unknown>) {
     .map(([category, amount]) => ({
       category,
       amount,
-      formatted: formatUSD(amount),
+      formatted: formatINR(amount),
       percentage: totalExpense ? Math.round((amount / totalExpense) * 100) : 0,
     }))
     .sort((a, b) => b.amount - a.amount);
@@ -146,9 +154,9 @@ export function handleGetSummary(args: Record<string, unknown>) {
     totalExpense,
     totalIncome,
     netSavings: totalIncome - totalExpense,
-    totalExpenseFormatted: formatUSD(totalExpense),
-    totalIncomeFormatted:  formatUSD(totalIncome),
-    netSavingsFormatted:   formatUSD(totalIncome - totalExpense),
+    totalExpenseFormatted: formatINR(totalExpense),
+    totalIncomeFormatted:  formatINR(totalIncome),
+    netSavingsFormatted:   formatINR(totalIncome - totalExpense),
     transactionCount: monthTxs.length,
     topCategories: categoryBreakdown.slice(0, 5),
     categoryBreakdown,
@@ -178,10 +186,10 @@ export function handleGetDashboardStats(_args: Record<string, unknown>) {
 
   return {
     currentMonth: month,
-    thisMonthExpense:           formatUSD(thisMonthExpense),
-    thisMonthIncome:            formatUSD(thisMonthIncome),
-    netSavings:                 formatUSD(thisMonthIncome - thisMonthExpense),
-    averageTransactionAmount:   formatUSD(avg),
+    thisMonthExpense:           formatINR(thisMonthExpense),
+    thisMonthIncome:            formatINR(thisMonthIncome),
+    netSavings:                 formatINR(thisMonthIncome - thisMonthExpense),
+    averageTransactionAmount:   formatINR(avg),
     totalTransactions:          data.transactions.length,
     thisMonthTransactions:      monthTxs.length,
     highestSingleExpense:       highest ? { ...highest, categoryName: catMap[highest.categoryId]?.name } : null,
@@ -204,7 +212,7 @@ export async function handleExportToExcel(_args: Record<string, unknown>): Promi
 
   const HEADER_FILL: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
   const HEADER_FONT: Partial<ExcelJS.Font> = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
-  const CURRENCY_FMT = '"$"#,##0.00';
+  const CURRENCY_FMT = '"₹"#,##0.00';
   const DATE_FMT = 'DD-MMM-YYYY';
 
   function styleHeader(row: ExcelJS.Row): void {

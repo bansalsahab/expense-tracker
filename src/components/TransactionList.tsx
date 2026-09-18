@@ -51,7 +51,14 @@ export default function TransactionList({ transactions, categories, onEdit, onDe
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-slate-900 text-sm truncate">{tx.description}</div>
-                    <div className="text-xs text-slate-400">{cat?.name ?? 'Unknown'}</div>
+                    <div className="text-xs text-slate-400 flex items-center gap-1.5">
+                      <span className="truncate">{cat?.name ?? 'Unknown'}</span>
+                      {tx.paymentMethod && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[10px] font-medium flex-shrink-0">
+                          {tx.paymentMethod}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {tx.notes && (
                     <div className="text-xs text-slate-400 hidden sm:block max-w-[120px] truncate">

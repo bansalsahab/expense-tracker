@@ -73,7 +73,7 @@ Or add to `.cursor/mcp.json` in the project root:
 ## Example Usage in Claude
 
 ```
-"Add a $45 expense for dinner at a restaurant in Food & Dining paid by Card"
+"Add a ₹450 expense for dinner at a restaurant in Food & Dining paid by Card"
 "Show me all expenses from this month"
 "What's my spending summary for 2025-07?"
 "Export my expenses to Excel"

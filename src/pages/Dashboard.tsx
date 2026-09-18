@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../context';
 import { formatCurrency, currentMonth } from '../store';
 import { format, subMonths } from 'date-fns';
@@ -184,7 +185,7 @@ export default function Dashboard() {
       <div className="card p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-slate-700">Recent Transactions</h2>
-          <a href="/expenses" className="text-xs text-blue-600 hover:underline">View all</a>
+          <Link to="/expenses" className="text-xs text-blue-600 hover:underline">View all</Link>
         </div>
         {recent.length === 0 ? (
           <div className="text-center py-8 text-slate-400 text-sm">No transactions yet</div>

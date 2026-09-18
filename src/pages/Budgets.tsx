@@ -115,7 +115,7 @@ export default function Budgets() {
                   {warn && <AlertTriangle size={16} className="text-amber-400" />}
                   {budget && !over && !warn && s > 0 && <CheckCircle size={16} className="text-emerald-500" />}
                   <div className="relative">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">₹</span>
                     <input
                       type="number"
                       min="0"

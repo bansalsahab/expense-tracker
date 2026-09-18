@@ -3,22 +3,28 @@ import type { AppData } from '../types';
 import { exportToExcel } from './exportExcel';
 
 /**
- * Watches AppData for changes and automatically re-exports to Excel
- * whenever transactions, categories, or budgets change.
- * Uses a debounce so rapid edits only trigger one export.
+ * Watches AppData for changes and automatically re-exports to Excel whenever any
+ * field the workbook renders changes (all transaction fields + category names —
+ * not just count/amount). Uses a debounce so rapid edits only trigger one export.
  */
 export function useAutoExport(data: AppData, enabled: boolean) {
   const [status, setStatus] = useState<'idle' | 'exporting' | 'done' | 'error'>('idle');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Track previous serialised snapshot to avoid exporting on unrelated re-renders
+  // Track previous serialised snapshot to avoid exporting on unrelated re-renders.
+  // Serialise every field the export reads so edits to category/date/type/notes/
+  // paymentMethod — and any budget or category change — are all detected.
   const prevSnapshotRef = useRef<string>('');
 
   useEffect(() => {
     if (!enabled) return;
 
     const snapshot = JSON.stringify({
-      t: data.transactions.length,
-      ids: data.transactions.map(t => t.id + t.amount).join(','),
+      transactions: data.transactions.map(t =>
+        [t.id, t.amount, t.description, t.type, t.categoryId, t.date, t.paymentMethod ?? '', t.notes ?? ''].join('|')
+      ),
+      // Only category name is rendered in the export (via catMap[id].name), so
+      // that's all we track — icon/color/budget edits don't change the workbook.
+      categories: data.categories.map(c => [c.id, c.name].join('|')),
     });
 
     if (snapshot === prevSnapshotRef.current) return;
