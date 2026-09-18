@@ -1,5 +1,9 @@
 export type TransactionType = 'expense' | 'income';
 
+export type PaymentMethod = 'Cash' | 'Card' | 'UPI' | 'Other';
+
+export const PAYMENT_METHODS: PaymentMethod[] = ['Cash', 'Card', 'UPI', 'Other'];
+
 export interface Category {
   id: string;
   name: string;
@@ -15,6 +19,7 @@ export interface Transaction {
   categoryId: string;
   date: string; // ISO date string YYYY-MM-DD
   type: TransactionType;
+  paymentMethod?: PaymentMethod;
   notes?: string;
 }
 

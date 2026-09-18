@@ -52,6 +52,7 @@ export async function loadData(userId: string): Promise<AppData> {
     categoryId: r.category_id ?? '',
     date: r.date,
     type: r.type,
+    paymentMethod: r.payment_method ?? undefined,
     notes: r.notes ?? undefined,
   }));
 
@@ -72,13 +73,14 @@ export async function addTransaction(
   const { data, error } = await supabase
     .from('transactions')
     .insert({
-      user_id:     userId,
-      amount:      tx.amount,
-      description: tx.description,
-      category_id: tx.categoryId || null,
-      date:        tx.date,
-      type:        tx.type,
-      notes:       tx.notes ?? null,
+      user_id:        userId,
+      amount:         tx.amount,
+      description:    tx.description,
+      category_id:    tx.categoryId || null,
+      date:           tx.date,
+      type:           tx.type,
+      payment_method: tx.paymentMethod ?? null,
+      notes:          tx.notes ?? null,
     })
     .select()
     .single();
@@ -86,6 +88,7 @@ export async function addTransaction(
   return {
     id: data.id, amount: Number(data.amount), description: data.description,
     categoryId: data.category_id ?? '', date: data.date, type: data.type,
+    paymentMethod: data.payment_method ?? undefined,
     notes: data.notes ?? undefined,
   };
 }
@@ -96,12 +99,13 @@ export async function updateTransaction(
   const { error } = await supabase
     .from('transactions')
     .update({
-      amount:      tx.amount,
-      description: tx.description,
-      category_id: tx.categoryId || null,
-      date:        tx.date,
-      type:        tx.type,
-      notes:       tx.notes ?? null,
+      amount:         tx.amount,
+      description:    tx.description,
+      category_id:    tx.categoryId || null,
+      date:           tx.date,
+      type:           tx.type,
+      payment_method: tx.paymentMethod ?? null,
+      notes:          tx.notes ?? null,
     })
     .eq('id', tx.id)
     .eq('user_id', userId);
@@ -171,8 +175,13 @@ export function currentMonth(): string {
 }
 
 // ── MCP file sync (dev only) ──────────────────────────────────────────────────
+// Mirrors app state to ~/.expense-tracker/data.json via the Vite dev middleware
+// (see vite.config.ts). The /api/sync endpoint only exists in the dev server, so
+// this is guarded to never run in a production build — it would otherwise POST the
+// user's entire dataset to a non-existent endpoint on every load and realtime event.
 export function syncToFile(data: AppData): void {
   if (typeof window === 'undefined') return;
+  if (!import.meta.env.DEV) return;
   fetch('/api/sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

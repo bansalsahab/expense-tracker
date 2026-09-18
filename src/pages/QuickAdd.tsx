@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import type { Transaction, Category } from '../types';
+import type { Transaction, Category, PaymentMethod } from '../types';
+import { PAYMENT_METHODS } from '../types';
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
@@ -44,6 +45,7 @@ export default function QuickAdd() {
   const [description, setDesc]      = useState('');
   const [categoryId, setCatId]      = useState('');
   const [date, setDate]             = useState(todayStr());
+  const [paymentMethod, setPayMethod] = useState<PaymentMethod | ''>('');
   const [screen, setScreen]         = useState<Screen>('form');
   const [errMsg, setErrMsg]         = useState('');
   const [sheetVisible, setSheetVis] = useState(false);
@@ -93,6 +95,7 @@ export default function QuickAdd() {
       description: description.trim(),
       categoryId: effectiveCatId,
       date,
+      paymentMethod: paymentMethod || undefined,
     };
 
     try {
@@ -255,6 +258,30 @@ export default function QuickAdd() {
                   onSelect={() => setCatId(c.id)}
                 />
               ))}
+            </div>
+          </div>
+
+          {/* Payment method chips — optional */}
+          <div className="mb-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2 px-1">Payment Method</p>
+            <div className="flex flex-wrap gap-2">
+              {PAYMENT_METHODS.map(pm => {
+                const selected = paymentMethod === pm;
+                return (
+                  <button
+                    key={pm}
+                    type="button"
+                    onClick={() => { haptic(); setPayMethod(selected ? '' : pm); }}
+                    className={`px-3 py-2 rounded-2xl text-sm font-medium transition-all duration-150 touch-manipulation select-none
+                      ${selected
+                        ? 'bg-slate-800 text-white shadow-sm scale-[0.97]'
+                        : 'bg-white/60 text-slate-700 border border-slate-200'
+                      }`}
+                  >
+                    {pm}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

@@ -23,15 +23,16 @@ create policy "Users see own categories"
 
 -- ── Transactions ─────────────────────────────────────────────────────────────
 create table if not exists transactions (
-  id            uuid primary key default gen_random_uuid(),
-  user_id       uuid not null references auth.users(id) on delete cascade,
-  amount        numeric(12,2) not null check (amount > 0),
-  description   text not null,
-  category_id   uuid references categories(id) on delete set null,
-  date          date not null,
-  type          text not null check (type in ('expense','income')),
-  notes         text,
-  created_at    timestamptz not null default now()
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid not null references auth.users(id) on delete cascade,
+  amount          numeric(12,2) not null check (amount > 0),
+  description     text not null,
+  category_id     uuid references categories(id) on delete set null,
+  date            date not null,
+  type            text not null check (type in ('expense','income')),
+  payment_method  text check (payment_method is null or payment_method in ('Cash','Card','UPI','Other')),
+  notes           text,
+  created_at      timestamptz not null default now()
 );
 
 alter table transactions enable row level security;
